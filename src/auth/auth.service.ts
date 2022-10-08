@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -12,7 +17,10 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(createUserDto: CreateUserDto) {}
+  async login(createUserDto: CreateUserDto) {
+    const user = await this.validateUser(createUserDto);
+    return this.generateToken(user);
+  }
 
   async registration(createUserDto: CreateUserDto) {
     const candidate = await this.usersService.getUserByEmail(
@@ -30,10 +38,22 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  async generateToken(user: User) {
+  private async generateToken(user: User) {
     const payload = { email: user.email };
     return {
       token: this.jwtService.sign(payload),
     };
+  }
+
+  private async validateUser(createUserDto: CreateUserDto) {
+    const user = await this.usersService.getUserByEmail(createUserDto.email);
+    const passwordEquals = await bcrypt.compare(
+      createUserDto.password,
+      user.password,
+    );
+    if (user && passwordEquals) {
+      return user;
+    }
+    throw new UnauthorizedException({ message: 'Invalid email or password!' });
   }
 }
