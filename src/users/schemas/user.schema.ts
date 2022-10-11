@@ -22,6 +22,9 @@ export class User {
 
   @Prop()
   friendsId: string[];
+
+  @Prop()
+  posts: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -5,4 +5,5 @@ export class CreateUserDto {
   readonly lastName: string;
   readonly interests: string[];
   readonly friendsId: string[];
+  readonly posts: string[];
 }

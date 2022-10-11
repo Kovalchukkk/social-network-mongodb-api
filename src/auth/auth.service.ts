@@ -39,21 +39,32 @@ export class AuthService {
   }
 
   private async generateToken(user: User) {
-    const payload = { email: user.email };
+    const payload = {
+      email: user.email,
+      id: await this.usersService.getUserIdByEmail(user.email),
+    };
     return {
       token: this.jwtService.sign(payload),
     };
   }
 
   private async validateUser(createUserDto: CreateUserDto) {
-    const user = await this.usersService.getUserByEmail(createUserDto.email);
-    const passwordEquals = await bcrypt.compare(
-      createUserDto.password,
-      user.password,
-    );
-    if (user && passwordEquals) {
-      return user;
+    try {
+      const user = await this.usersService.getUserByEmail(createUserDto.email);
+      const passwordEquals = await bcrypt.compare(
+        createUserDto.password,
+        user.password,
+      );
+      if (user && passwordEquals) {
+        return user;
+      }
+      throw new UnauthorizedException({
+        message: 'Invalid email or password!',
+      });
+    } catch (error) {
+      throw new UnauthorizedException({
+        message: 'Invalid email or password!',
+      });
     }
-    throw new UnauthorizedException({ message: 'Invalid email or password!' });
   }
 }
